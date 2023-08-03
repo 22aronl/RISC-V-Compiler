@@ -9,5 +9,6 @@ class Emulator
 public:
     void instruction(std::string op, int val1, int val2)
     {
+        
     }
 };
