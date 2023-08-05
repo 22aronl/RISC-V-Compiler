@@ -2,6 +2,7 @@
 #define STATEMENT_H
 
 #include "expression.h"
+#include <vector>
 
 class Statement
 {
@@ -21,19 +22,20 @@ public:
 
 class Var_Assignment : public Statement
 {
-    std::string name;
+    Expression* leftOp;
     Expression *value;
     std::string op;
 public:
-    Var_Assignment(std::string name, Expression *value, std::string op)
+    Var_Assignment(Expression* leftOp, Expression *value, std::string op)
     {
-        this->name = name;
+        this->leftOp = leftOp;
         this->value = value;
         this->op = op;
     }
 
 };
 
+//declares array
 class Array_Declaration : public Statement
 {
     std::string type;
@@ -47,4 +49,54 @@ public:
     }
 };
 
-#endif // !STATEMENT_H
+class For_Loop : public Statement
+{
+    Statement *init;
+    Expression *condition;
+    Statement *increment;
+    //body is a vector of statements
+    std::vector<Statement*> body;
+
+public:
+    For_Loop(Statement *init, Expression *condition, Statement *increment, std::vector<Statement*> body)
+    {
+        this->init = init;
+        this->condition = condition;
+        this->increment = increment;
+        this->body = body;
+    }
+};
+
+class If_Statement : public Statement
+{
+    Expression *condition;
+    std::vector<Statement*> body;
+    std::vector<Statement*> else_body;
+    bool has_else = false;
+public:
+    If_Statement(Expression *condition, std::vector<Statement*> body)
+    {
+        this->condition = condition;
+        this->body = body;
+    }
+
+    If_Statement(Expression *condition, std::vector<Statement*> body, std::vector<Statement*> else_body)
+    {
+        this->condition = condition;
+        this->body = body;
+        this->else_body = else_body;
+        this->has_else = true;
+    }
+};
+
+class Return_Statement : public Statement
+{
+    Expression *value;
+public:
+    Return_Statement(Expression *value)
+    {
+        this->value = value;
+    }
+};
+
+#endif // !STATEMENT_H 

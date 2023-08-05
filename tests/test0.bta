@@ -1,0 +1,6 @@
+route n(int k): int {
+    if (k == 0) {
+        return 1;
+    }
+    return 2 * n(k - 1);
+}

@@ -2,6 +2,8 @@
 #include <cctype>
 
 #include "group/expression.h"
+#include "group/statement.h"
+#include "group/global.h"
 
 class Tokenizer
 {
@@ -26,7 +28,8 @@ class Tokenizer
     bool isoperator(char c)
     {
         return c == '/' || c == '*' || c == '%' || c == '+' || c == '-' || c == '&' ||
-               c == '|' || c == '(' || c == ')' || c == '!' || c == '<' || c == '>';
+               c == '|' || c == '(' || c == ')' || c == '!' || c == '<' || c == '>' || 
+                c== '[' || c == ']';
     }
 
     bool isdec(char c)
@@ -37,11 +40,6 @@ class Tokenizer
     bool isterminating(char c)
     {
         return c == ';';
-    }
-
-    bool isnum(char c)
-    {
-        return false;
     }
 
     /**
@@ -69,6 +67,10 @@ public:
         }
     }
 
+    bool isnum(char c) {
+        return std::isdigit(c);
+    }
+
     std::string getNextString()
     {
         std::string string;
@@ -94,9 +96,17 @@ public:
                 is_eof = true;
             }
         }
-        else if (isnum(cur_ch))
+        else if (isnum(cur_ch)) //TODO: maybe issues with negative numbers
         {
-            // TODO: add method
+            while (isnum(cur_ch))
+            {
+                string += cur_ch;
+                if (!std::cin.get(cur_ch))
+                {
+                    is_eof = true;
+                    break;
+                }
+            }
         }
         else
         {
@@ -112,6 +122,7 @@ public:
             }
         }
 
+        std::cout << "hi" << string << "\n";
         return string;
     }
 
@@ -159,6 +170,20 @@ class Parser
         return new Number(isNegative ? -value : value);
     }
 
+    Struct_Access *parseStructAccess()
+    {
+        std::string name = currentToken;
+        eat(currentToken);
+        if (currentToken == ".")
+        {
+            return new Struct_Access(name, parseStructAccess());
+        }
+        else
+        {
+            return new Struct_Access(name);
+        }
+    }
+
     Expression *parseValue()
     {
         if (currentToken == "(") // paranthese
@@ -192,23 +217,23 @@ class Parser
                     if (currentToken == ",")
                         eat(",");
                     else
-                        //TODO: Throw an Error
+                        // TODO: Throw an Error
                         break;
                 }
                 eat(")");
                 return new Function_Call(name, args);
             }
-            else if(currentToken == "[") {
+            else if (currentToken == "[")
+            {
                 eat("[");
                 Expression *index = parseExpression();
                 eat("]");
                 return new Array_Access(name, index);
             }
-            else if(currentToken == ".") {
+            else if (currentToken == ".")
+            {
                 eat(".");
-                std::string member = currentToken;
-                eat(currentToken);
-                return new Struct_Access(name, member);
+                return new Struct_Access(name, parseStructAccess());
             }
             else
             {
@@ -219,12 +244,14 @@ class Parser
 
     Expression *parseNegative()
     {
-        if(currentToken == "-") {
+        if (currentToken == "-")
+        {
             eat("-");
             Expression *value = parseValue();
             return new Negation(value);
         }
-        else {
+        else
+        {
             return parseValue();
         }
     }
@@ -349,23 +376,233 @@ class Parser
         return left;
     }
 
-
 public:
+    Parser() {
+        currentToken = tk.getNextString();
+    }
+
     Expression *parseExpression()
     {
         return parseLogicalOr();
+    }
+
+    Statement *parseStatement()
+    {
+        if (currentToken == "for")
+        {
+            eat("for");
+            eat("(");
+            Statement *init = parseStatement();
+            eat(";");
+            Expression *condition = parseExpression();
+            eat(";");
+            Statement *increment = parseStatement();
+            eat(")");
+            eat("{");
+            std::vector<Statement *> body = parseMultipleStatements();
+            eat("}");
+            return new For_Loop(init, condition, increment, body);
+        }
+        else if (currentToken == "if")
+        {
+            eat("if");
+            eat("(");
+            Expression *condition = parseExpression();
+            eat(")");
+            eat("{");
+            std::vector<Statement *> body = parseMultipleStatements();
+            eat("}");
+            if (currentToken == "else")
+            {
+                eat("else");
+                eat("{");
+                std::vector<Statement *> else_body = parseMultipleStatements();
+                eat("}");
+                return new If_Statement(condition, body, else_body);
+            }
+            else
+            {
+                return new If_Statement(condition, body);
+            }
+        }
+        else if (currentToken == "new")
+        {
+            eat("new");
+            std::string type = currentToken;
+            eat(currentToken);
+            std::string name = currentToken;
+            eat(currentToken);
+            if (currentToken == "[")
+            {
+                eat("[");
+                Expression *size = parseExpression();
+                eat("]");
+                return new Array_Declaration(type, name, size);
+            }
+            else
+            {
+                return new Var_Declaration(type, name);
+            }
+        }
+        else if (currentToken == "return")
+        {
+            eat("return");
+            Expression *value = parseExpression();
+            eat(";");
+            return new Return_Statement(value);
+        }
+        else
+        {
+            std::string name = currentToken;
+            eat(currentToken);
+
+            Expression *leftOp;
+
+            if (currentToken == ".")
+            {
+                eat(".");
+                leftOp = new Struct_Access(name, parseStructAccess());
+            }
+            else if (currentToken == "[")
+            {
+                eat("[");
+                leftOp = new Array_Access(name, parseExpression());
+                eat("]");
+            }
+            else
+            {
+                leftOp = new Variable(name);
+            }
+
+            std::string op = currentToken;
+            eat(currentToken);
+
+            Expression *rightOp = parseExpression();
+            eat(";");
+
+            return new Var_Assignment(leftOp, rightOp, op);
+        }
+    }
+
+    std::vector<Statement *> parseMultipleStatements()
+    {
+        std::vector<Statement *> statements;
+        while (currentToken != "}")
+        {
+            statements.push_back(parseStatement());
+        }
+        return statements;
+    }
+
+    Global *parseGlobal()
+    {
+        if (currentToken == "volume")
+        { // struct declaration
+            eat("volume");
+            std::string name = currentToken;
+            eat(currentToken);
+            eat("{");
+            std::vector<Var_Declaration *> vars;
+            while (currentToken != "}")
+            {
+                std::string type = currentToken;
+                eat(currentToken);
+                std::string name = currentToken;
+                eat(currentToken);
+                eat(";");
+                vars.push_back(new Var_Declaration(type, name));
+            }
+
+            return new Struct_Declaration(name, vars);
+        }
+        else if (currentToken == "route")
+        { // function declaration
+            eat("route");
+            std::string name = currentToken;
+            eat(currentToken);
+            eat("(");
+            std::vector<Var_Declaration *> args;
+            while (currentToken != ")")
+            {
+                std::string type = currentToken;
+                eat(currentToken);
+                std::string name = currentToken;
+                eat(currentToken);
+                args.push_back(new Var_Declaration(type, name));
+                if (currentToken == ",")
+                {
+                    eat(",");
+                }
+                else
+                {
+                    break;
+                }
+            }
+            eat(")");
+            eat(":");
+            std::string type = currentToken;
+            eat(currentToken);
+
+            eat("{");
+            std::vector<Statement *> body = parseMultipleStatements();
+            eat("}");
+
+            return new Function_Declaration(type, name, args, body);
+        }
+        else if (currentToken == "new")
+        { // variable declaration
+            eat("new");
+            std::string type = currentToken;
+            eat(currentToken);
+            std::string name = currentToken;
+            eat(currentToken);
+
+            if (currentToken == "[")
+            {
+                eat("[");
+                Expression *size = parseExpression();
+                eat("]");
+                eat(";");
+                return new Global_Array_Declaration(type, name, size);
+            }
+            else
+            {
+                Expression *value = parseExpression();
+                eat(";");
+                return new Global_Var_Declaration(type, name, value);
+            }
+        }
+        else if (currentToken == "struct_new")
+        {
+            eat("struct_new");
+            std::string type = currentToken;
+            eat(currentToken);
+            std::string name = currentToken;
+            eat(currentToken);
+            eat(";");
+            return new Struct_Var_Declaration(type, name);
+        }
+
+        return nullptr; //TODO: Add Error Feedback
+    }
+
+    std::vector<Global *> parseFile() {
+        std::vector<Global *> globals;
+        while (!tk.getEOF())
+        {
+            globals.push_back(parseGlobal());
+        }
+        return globals;
     }
 };
 
 int main()
 {
 
-    Tokenizer tokenizer;
+    Parser parser;
+    parser.parseExpression()->print();
+    //parser.parseFile();
 
-    while (!tokenizer.getEOF()) // for (int i = 0; i < 10; i++) //
-    {
-        std::cout << tokenizer.getNextString() << " " << tokenizer.getEOF() << '\n';
-    }
 
     return 0;
 }
