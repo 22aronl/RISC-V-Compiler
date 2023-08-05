@@ -1,0 +1,11 @@
+new int number = 14;
+new int number[3];
+
+structnew col col;
+
+
+volume col {
+    new int number;
+    new int number[3];
+    new string nmum[4 * 3 + col.number[1]];
+};

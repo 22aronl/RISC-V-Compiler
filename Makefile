@@ -4,7 +4,7 @@ OBJS := $(SRCS:.cpp=.o)
 CXX := g++
 CXXFLAGS := -Wall -Wextra -std=c++11 -O0
 
-BTA_FILES := $(wildcard tests/expression/*.bta)
+BTA_FILES := $(wildcard tests/statement/*.bta)
 
 TARGET := parser_binary
 

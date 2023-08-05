@@ -28,8 +28,8 @@ class Tokenizer
     bool isoperator(char c)
     {
         return c == '/' || c == '*' || c == '%' || c == '+' || c == '-' || c == '&' ||
-               c == '|' || c == '(' || c == ')' || c == '!' || c == '<' || c == '>' || 
-                c== '[' || c == ']';
+               c == '|' || c == '(' || c == ')' || c == '!' || c == '<' || c == '>' ||
+               c == '[' || c == ']' || c == '=' || c == '{' || c == '}' || c == '.';
     }
 
     bool isdec(char c)
@@ -67,7 +67,8 @@ public:
         }
     }
 
-    bool isnum(char c) {
+    bool isnum(char c)
+    {
         return std::isdigit(c);
     }
 
@@ -96,7 +97,7 @@ public:
                 is_eof = true;
             }
         }
-        else if (isnum(cur_ch)) //TODO: maybe issues with negative numbers
+        else if (isnum(cur_ch)) // TODO: maybe issues with negative numbers
         {
             while (isnum(cur_ch))
             {
@@ -122,7 +123,6 @@ public:
             }
         }
 
-        std::cout << "hi" << string << "\n";
         return string;
     }
 
@@ -176,11 +176,20 @@ class Parser
         eat(currentToken);
         if (currentToken == ".")
         {
-            return new Struct_Access(name, parseStructAccess());
+            return new Struct_Access(new Variable(name), parseStructAccess());
+        }
+        else if(currentToken == "[") {
+            eat("[");
+            Expression *index = parseExpression();
+            eat("]");
+            if(currentToken == ".")
+                return new Struct_Access(new Array_Access(name, index), parseStructAccess());
+            else
+                return new Struct_Access(new Array_Access(name, index));
         }
         else
         {
-            return new Struct_Access(name);
+            return new Struct_Access(new Variable(name));
         }
     }
 
@@ -233,7 +242,7 @@ class Parser
             else if (currentToken == ".")
             {
                 eat(".");
-                return new Struct_Access(name, parseStructAccess());
+                return new Struct_Access(new Variable(name), parseStructAccess());
             }
             else
             {
@@ -377,7 +386,8 @@ class Parser
     }
 
 public:
-    Parser() {
+    Parser()
+    {
         currentToken = tk.getNextString();
     }
 
@@ -461,7 +471,7 @@ public:
             if (currentToken == ".")
             {
                 eat(".");
-                leftOp = new Struct_Access(name, parseStructAccess());
+                leftOp = new Struct_Access(new Variable(name), parseStructAccess());
             }
             else if (currentToken == "[")
             {
@@ -502,16 +512,31 @@ public:
             std::string name = currentToken;
             eat(currentToken);
             eat("{");
-            std::vector<Var_Declaration *> vars;
-            while (currentToken != "}")
+            std::vector<Statement *> vars;
+            while(currentToken != "}")
             {
+                eat("new");
                 std::string type = currentToken;
                 eat(currentToken);
                 std::string name = currentToken;
                 eat(currentToken);
-                eat(";");
-                vars.push_back(new Var_Declaration(type, name));
+                if (currentToken == "[")
+                {
+                    eat("[");
+                    Expression *size = parseExpression();
+                    eat("]");
+                    eat(";");
+                    vars.push_back(new Array_Declaration(type, name, size));
+                }
+                else
+                {
+                    eat(";");
+                    vars.push_back(new Var_Declaration(type, name));
+                }
             }
+
+            eat("}");
+            eat(";");
 
             return new Struct_Declaration(name, vars);
         }
@@ -567,14 +592,15 @@ public:
             }
             else
             {
+                eat("=");
                 Expression *value = parseExpression();
                 eat(";");
                 return new Global_Var_Declaration(type, name, value);
             }
         }
-        else if (currentToken == "struct_new")
+        else if (currentToken == "structnew")
         {
-            eat("struct_new");
+            eat("structnew");
             std::string type = currentToken;
             eat(currentToken);
             std::string name = currentToken;
@@ -583,10 +609,12 @@ public:
             return new Struct_Var_Declaration(type, name);
         }
 
-        return nullptr; //TODO: Add Error Feedback
+        std::cout << "UH OH" << currentToken << "\n";
+        return nullptr; // TODO: Add Error Feedback
     }
 
-    std::vector<Global *> parseFile() {
+    std::vector<Global *> parseFile()
+    {
         std::vector<Global *> globals;
         while (!tk.getEOF())
         {
@@ -600,9 +628,12 @@ int main()
 {
 
     Parser parser;
-    parser.parseExpression()->print();
-    //parser.parseFile();
 
+    for (auto global : parser.parseFile())
+    {
+        global->print();
+    }
+    // parser.parseFile();
 
     return 0;
 }

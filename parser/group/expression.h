@@ -101,19 +101,19 @@ public:
 
 class Struct_Access : public Expression
 {
-    std::string name;
+    Expression* name;
     Struct_Access *member;
     bool continues = false;
 
 public:
-    Struct_Access(std::string name, Struct_Access *member)
+    Struct_Access(Expression* name, Struct_Access *member)
     {
         this->name = name;
         this->member = member;
         this->continues = true;
     }
 
-    Struct_Access(std::string name)
+    Struct_Access(Expression* name)
     {
         this->name = name;
     }
@@ -121,7 +121,8 @@ public:
     void print(int i)
     {
         print_offset(i);
-        std::cout << "Struct_Access " << name << std::endl;
+        std::cout << "Struct_Access ";
+        name->print(i);
         if (continues)
         {
             member->print(i + 1);

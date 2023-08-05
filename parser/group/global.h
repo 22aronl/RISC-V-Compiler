@@ -7,6 +7,20 @@
 
 class Global
 {
+protected:
+    void print_offset(int i) {
+        for (int j = 0; j < i; j++)
+        {
+            std::cout << "  ";
+        }
+    }
+
+public:
+    virtual void print(int i) = 0;
+
+    void print() {
+        print(0);
+    }
 };
 
 class Global_Var_Declaration : public Global
@@ -21,6 +35,13 @@ public:
         this->type = type;
         this->name = name;
         this->value = value;
+    }
+
+    void print(int i)
+    {
+        print_offset(i);
+        std::cout << "Global_Var_Declaration " << type << " " << name << std::endl;
+        value->print(i + 1);
     }
 };
 
@@ -37,18 +58,35 @@ public:
         this->name = name;
         this->size = size;
     }
+
+    void print(int i)
+    {
+        print_offset(i);
+        std::cout << "Global_Array_Declaration " << type << " " << name << std::endl;
+        size->print(i + 1);
+    }
 };
 
 class Struct_Declaration : public Global
 {
     std::string name;
-    std::vector<Var_Declaration *> vars;
+    std::vector<Statement *> vars;
 
 public:
-    Struct_Declaration(std::string name, std::vector<Var_Declaration *> vars)
+    Struct_Declaration(std::string name, std::vector<Statement *> vars)
     {
         this->name = name;
         this->vars = vars;
+    }
+
+    void print(int i)
+    {
+        print_offset(i);
+        std::cout << "Struct_Declaration " << name << std::endl;
+        for (auto var : vars)
+        {
+            var->print(i + 1);
+        }
     }
 };
 
@@ -62,6 +100,12 @@ public:
     {
         this->type = type;
         this->name = name;
+    }
+
+    void print(int i)
+    {
+        print_offset(i);
+        std::cout << "Struct_Var_Declaration " << type << " " << name << std::endl;
     }
 };
 
@@ -79,6 +123,20 @@ public:
         this->name = name;
         this->args = args;
         this->body = body;
+    }
+
+    void print(int i)
+    {
+        print_offset(i);
+        std::cout << "Function_Declaration " << type << " " << name << std::endl;
+        for (auto arg : args)
+        {
+            arg->print(i + 1);
+        }
+        for (auto statement : body)
+        {
+            statement->print(i + 1);
+        }
     }
 };
 

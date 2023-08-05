@@ -1,0 +1,13 @@
+route a(): void {
+    return 3 + 2;
+}
+
+route b(int k): int {
+    new int a;
+    a = k;
+    if(a + 2 == 3) {
+        return a;
+    }
+
+    return 3;
+}
