@@ -1,0 +1,14 @@
+route test(int k) : int {
+    new int i;
+    new int j;
+
+    i = 1;
+    j = 1;
+    for(new int k; k < 10; k = k + 1) {
+        new int l;
+        l = j;
+        j += i;
+        i = l;
+    }
+    return j;
+}

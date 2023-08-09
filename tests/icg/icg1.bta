@@ -1,0 +1,8 @@
+route test(int k) : int {
+    new int i;
+    i = 0;
+    new int p;
+    p = 3;
+    k = i + p + 1 * 9;
+    return k + 3;
+}

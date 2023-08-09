@@ -92,9 +92,18 @@ public:
         {
             string += cur_ch;
             // TODO: Add support for removing comments
+
             if (!std::cin.get(cur_ch))
             {
                 is_eof = true;
+            }
+
+            if(cur_ch == '=' || cur_ch == '>' || cur_ch == '<') {
+                string += cur_ch;
+                if (!std::cin.get(cur_ch))
+                {
+                    is_eof = true;
+                }
             }
         }
         else if (isnum(cur_ch)) // TODO: maybe issues with negative numbers
@@ -147,6 +156,7 @@ class Parser
         else
         {
             // TODO: Throw an Error
+            std::cout << "Expected " << token << " but got " << currentToken << std::endl;
         }
     }
 
@@ -409,7 +419,7 @@ public:
             Statement *increment = parseStatement();
             eat(")");
             eat("{");
-            std::vector<Statement *> body = parseMultipleStatements();
+            Statement* body = parseMultipleStatements();
             eat("}");
             return new For_Loop(init, condition, increment, body);
         }
@@ -420,13 +430,13 @@ public:
             Expression *condition = parseExpression();
             eat(")");
             eat("{");
-            std::vector<Statement *> body = parseMultipleStatements();
+            Statement* body = parseMultipleStatements();
             eat("}");
             if (currentToken == "else")
             {
                 eat("else");
                 eat("{");
-                std::vector<Statement *> else_body = parseMultipleStatements();
+                Statement* else_body = parseMultipleStatements();
                 eat("}");
                 return new If_Statement(condition, body, else_body);
             }
@@ -447,10 +457,12 @@ public:
                 eat("[");
                 Expression *size = parseExpression();
                 eat("]");
+                eat(";");
                 return new Array_Declaration(type, name, size);
             }
             else
             {
+                eat(";");
                 return new Var_Declaration(type, name);
             }
         }
@@ -494,14 +506,19 @@ public:
         }
     }
 
-    std::vector<Statement *> parseMultipleStatements()
+    Statement* parseMultipleStatements()
     {
-        std::vector<Statement *> statements;
+        Statement* right;
+        if(currentToken != "}") {
+            right = parseStatement();
+        }
+
         while (currentToken != "}")
         {
-            statements.push_back(parseStatement());
+            Statement* left = parseStatement();
+            right = new Sequence(right, left);
         }
-        return statements;
+        return right;
     }
 
     Global *parseGlobal()
@@ -569,7 +586,7 @@ public:
             eat(currentToken);
 
             eat("{");
-            std::vector<Statement *> body = parseMultipleStatements();
+            Statement* body = parseMultipleStatements();
             eat("}");
 
             return new Function_Declaration(type, name, args, body);
@@ -629,11 +646,12 @@ int main()
 
     Parser parser;
 
-    for (auto global : parser.parseFile())
-    {
-        global->print();
-    }
-    // parser.parseFile();
+    Global* method = parser.parseGlobal();
+    Environment* env = new Environment(nullptr);
 
+    Function_Declaration* func = (Function_Declaration*)method;
+    func->body->gen_icg(env, 0, 0);//env->get_new_label(), env->get_new_label());
+    // parser.parseFile();
+    env->print_icg();
     return 0;
 }

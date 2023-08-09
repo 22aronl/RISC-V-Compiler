@@ -1,0 +1,8 @@
+route test(int k) : int {
+    new int i;
+    if(i == k) {
+        return 1;
+    } else {
+        return 0;
+    }
+}

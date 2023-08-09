@@ -70,10 +70,10 @@ public:
 class Struct_Declaration : public Global
 {
     std::string name;
-    std::vector<Statement *> vars;
+    std::vector<Statement*> vars;
 
 public:
-    Struct_Declaration(std::string name, std::vector<Statement *> vars)
+    Struct_Declaration(std::string name, std::vector<Statement*> vars)
     {
         this->name = name;
         this->vars = vars;
@@ -114,10 +114,10 @@ class Function_Declaration : public Global
     std::string type;
     std::string name;
     std::vector<Var_Declaration *> args;
-    std::vector<Statement *> body;
 
 public:
-    Function_Declaration(std::string type, std::string name, std::vector<Var_Declaration *> args, std::vector<Statement *> body)
+    Statement* body;
+    Function_Declaration(std::string type, std::string name, std::vector<Var_Declaration *> args, Statement* body)
     {
         this->type = type;
         this->name = name;
@@ -133,10 +133,7 @@ public:
         {
             arg->print(i + 1);
         }
-        for (auto statement : body)
-        {
-            statement->print(i + 1);
-        }
+        body->print(i + 1);
     }
 };
 

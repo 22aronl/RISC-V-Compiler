@@ -197,24 +197,29 @@ class Emulator
                 registers[rd] = (mem[registers[rs1] + imm12] & 0xFFFF);
             break;
         case 0b0100011: // store
-            if (opcodeB == 000)
+            if (opcodeB == 0b000)
                 mem[registers[rs1] + imm12] = registers[rs2] & 0xFF;
-            else if (opcodeB == 001)
+            else if (opcodeB == 0b001)
                 mem[registers[rs1] + imm12] = registers[rs2] & 0xFFFF;
-            else if (opcodeB == 010)
+            else if (opcodeB == 0b010)
                 mem[registers[rs1] + imm12] = registers[rs2];
             break;
         case 0b1100111: // jalr
+        {
             int t = pc_loc + 4;
             pc = (registers[rs1] + signExtend(imm12, 12)) & ~1;
             registers[rd] = t;
             break;
+        }
         case 0b1101111: // jal
             registers[rd] = pc_loc + 4;
             pc = pc_loc + offset20;
             break;
         case 0b1100011: // branch
             instruction_branch(opcodeB, rs1, rs2, offset12, pc_loc);
+            break;
+        default:
+            std::cout << "Error: instruction " << instruction << std::endl;
             break;
         }
     }

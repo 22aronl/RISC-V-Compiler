@@ -1,0 +1,16 @@
+route makeChocolate(int small, int big, int goal) : int {
+    if(big * 5 < goal) {
+        goal -= big * 5;
+    }
+    else
+    {
+        goal %= 5;
+    }
+
+    if(small < goal) {
+        return -1;
+    }
+    else {
+        return goal;
+    }
+}

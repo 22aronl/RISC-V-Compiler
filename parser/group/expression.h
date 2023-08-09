@@ -1,13 +1,16 @@
 #ifndef _EXPRESSION_H_
 #define _EXPRESSION_H_
 
-#include <string>
+#include <iostream>
 #include <vector>
+#include "../icg/env.h"
 
 class Expression
 {
+
 protected:
-    void print_offset(int i) {
+    void print_offset(int i)
+    {
         for (int j = 0; j < i; j++)
         {
             std::cout << "  ";
@@ -15,9 +18,13 @@ protected:
     }
 
 public:
+    virtual R_Node *gen(Environment *env) = 0;
+    virtual std::string reduce(Environment *env) = 0;
+
     virtual void print(int i) = 0;
 
-    void print() {
+    void print()
+    {
         print(0);
     }
 };
@@ -31,6 +38,9 @@ public:
     {
         this->value = value;
     }
+
+    R_Node *gen(Environment *env);
+    std::string reduce(Environment *env);
 
     void print(int i)
     {
@@ -47,6 +57,14 @@ public:
     Variable(std::string name)
     {
         this->name = name;
+    }
+
+    R_Node *gen(Environment *env);
+    std::string reduce(Environment *env);
+
+    std::string get_name()
+    {
+        return name;
     }
 
     void print(int i)
@@ -67,6 +85,9 @@ public:
         this->name = name;
         this->args = args;
     }
+
+    R_Node *gen(Environment *env);
+    std::string reduce(Environment *env);
 
     void print(int i)
     {
@@ -91,6 +112,9 @@ public:
         this->index = index;
     }
 
+    R_Node *gen(Environment *env);
+    std::string reduce(Environment *env);
+
     void print(int i)
     {
         print_offset(i);
@@ -101,22 +125,25 @@ public:
 
 class Struct_Access : public Expression
 {
-    Expression* name;
+    Expression *name;
     Struct_Access *member;
     bool continues = false;
 
 public:
-    Struct_Access(Expression* name, Struct_Access *member)
+    Struct_Access(Expression *name, Struct_Access *member)
     {
         this->name = name;
         this->member = member;
         this->continues = true;
     }
 
-    Struct_Access(Expression* name)
+    Struct_Access(Expression *name)
     {
         this->name = name;
     }
+
+    R_Node *gen(Environment *env);
+    std::string reduce(Environment *env);
 
     void print(int i)
     {
@@ -132,17 +159,20 @@ public:
 
 class Binary_Operation : public Expression
 {
+public:
     Expression *left;
     Expression *right;
     std::string op;
 
-public:
     Binary_Operation(Expression *left, Expression *right, std::string op)
     {
         this->left = left;
         this->right = right;
         this->op = op;
     }
+
+    R_Node *gen(Environment *env);
+    std::string reduce(Environment *env);
 
     void print(int i)
     {
@@ -162,6 +192,9 @@ public:
     {
         this->value = value;
     }
+
+    R_Node *gen(Environment *env);
+    std::string reduce(Environment *env);
 
     void print(int i)
     {

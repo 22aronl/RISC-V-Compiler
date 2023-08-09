@@ -7,7 +7,8 @@
 class Statement
 {
 protected:
-    void print_offset(int i) {
+    void print_offset(int i)
+    {
         for (int j = 0; j < i; j++)
         {
             std::cout << "  ";
@@ -17,7 +18,10 @@ protected:
 public:
     virtual void print(int i) = 0;
 
-    void print() {
+    virtual void gen_icg(Environment *env, int start_label, int end_label) = 0;
+
+    void print()
+    {
         print(0);
     }
 };
@@ -33,6 +37,8 @@ public:
         this->type = type;
         this->name = name;
     }
+
+    void gen_icg(Environment *env, int start_label, int end_label);
 
     void print(int i)
     {
@@ -54,6 +60,8 @@ public:
         this->value = value;
         this->op = op;
     }
+
+    void gen_icg(Environment *env, int start_label, int end_label);
 
     void print(int i)
     {
@@ -79,6 +87,8 @@ public:
         this->size = size;
     }
 
+    void gen_icg(Environment *env, int start_label, int end_label);
+
     void print(int i)
     {
         print_offset(i);
@@ -93,16 +103,18 @@ class For_Loop : public Statement
     Expression *condition;
     Statement *increment;
     // body is a vector of statements
-    std::vector<Statement *> body;
+    Statement* body;
 
 public:
-    For_Loop(Statement *init, Expression *condition, Statement *increment, std::vector<Statement *> body)
+    For_Loop(Statement *init, Expression *condition, Statement *increment,  Statement* body)
     {
         this->init = init;
         this->condition = condition;
         this->increment = increment;
         this->body = body;
     }
+
+    void gen_icg(Environment *env, int start_label, int end_label);
 
     void print(int i)
     {
@@ -111,28 +123,25 @@ public:
         init->print(i + 1);
         condition->print(i + 1);
         increment->print(i + 1);
-        for (auto &s : body)
-        {
-            s->print(i + 1);
-        }
+        body->print(i + 1);
     }
 };
 
 class If_Statement : public Statement
 {
     Expression *condition;
-    std::vector<Statement *> body;
-    std::vector<Statement *> else_body;
+    Statement* body;
+    Statement* else_body;
     bool has_else = false;
 
 public:
-    If_Statement(Expression *condition, std::vector<Statement *> body)
+    If_Statement(Expression *condition, Statement* body)
     {
         this->condition = condition;
         this->body = body;
     }
 
-    If_Statement(Expression *condition, std::vector<Statement *> body, std::vector<Statement *> else_body)
+    If_Statement(Expression *condition, Statement* body, Statement* else_body)
     {
         this->condition = condition;
         this->body = body;
@@ -140,23 +149,19 @@ public:
         this->has_else = true;
     }
 
+    void gen_icg(Environment *env, int start_label, int end_label);
+
     void print(int i)
     {
         print_offset(i);
         std::cout << "If_Statement" << std::endl;
         condition->print(i + 1);
-        for (auto &s : body)
-        {
-            s->print(i + 1);
-        }
+        body->print(i + 1);
         if (has_else)
         {
             print_offset(i);
             std::cout << "Else" << std::endl;
-            for (auto &s : else_body)
-            {
-                s->print(i + 1);
-            }
+            else_body->print(i + 1);
         }
     }
 };
@@ -171,11 +176,34 @@ public:
         this->value = value;
     }
 
+    void gen_icg(Environment *env, int start_label, int end_label);
+
     void print(int i)
     {
         print_offset(i);
         std::cout << "Return_Statement" << std::endl;
         value->print(i + 1);
+    }
+};
+
+class Sequence : public Statement
+{
+    Statement *statement1;
+    Statement *statement2;
+
+public:
+    Sequence(Statement *statement1, Statement *statement2)
+    {
+        this->statement1 = statement1;
+        this->statement2 = statement2;
+    }
+
+    void gen_icg(Environment *env, int start_label, int end_label);
+
+    void print(int i)
+    {
+        statement1->print(i);
+        statement2->print(i);
     }
 };
 
