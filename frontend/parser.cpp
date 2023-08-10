@@ -413,7 +413,6 @@ public:
             eat("for");
             eat("(");
             Statement *init = parseStatement();
-            eat(";");
             Expression *condition = parseExpression();
             eat(";");
             Statement *increment = parseStatement();
