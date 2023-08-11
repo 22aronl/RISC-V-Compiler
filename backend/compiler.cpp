@@ -1,8 +1,37 @@
 
 #include <vector>
+#include <unordered_map>
 
 #include "block/block.h"
 #include "../frontend/icg/env.h"
+
+void calculate_next_use(Block *b)
+{
+    std::unordered_map<std::string, int> next_use;
+    next_use.insert(std::make_pair("", -1));
+    for (int i = b->nodes.size() - 1; i >= 0; i--)
+    {
+        Node *cur_node = b->nodes[i];
+        int x, y, z = -1;
+
+        if (cur_node->r_node->arg1 != "" && next_use.find(cur_node->r_node->arg1) != next_use.end())
+            y = next_use[cur_node->r_node->arg1];
+
+        if (cur_node->r_node->arg2 != "" && next_use.find(cur_node->r_node->arg2) != next_use.end())
+            z = next_use[cur_node->r_node->arg2];
+
+        if (next_use.find(cur_node->l_value) != next_use.end())
+            x = next_use[cur_node->l_value];
+
+        cur_node->set_next_use(x, y, z);
+        next_use[cur_node->l_value] = -1;
+
+        if (cur_node->r_node->arg1 != "")
+            next_use[cur_node->r_node->arg1] = i;
+        if (cur_node->r_node->arg2 != "")
+            next_use[cur_node->r_node->arg2] = i;
+    }
+}
 
 std::vector<Block *> generate_basic_blocks(std::vector<Node *> nodes)
 {
@@ -37,7 +66,7 @@ std::vector<Block *> generate_basic_blocks(std::vector<Node *> nodes)
         }
     }
 
-    if(cur_block_nodes.size() > 0)
+    if (cur_block_nodes.size() > 0)
     {
         blocks.push_back(new Block(cur_block_nodes));
         node_locations[nodes.size() - 1] = block_count;
@@ -45,25 +74,31 @@ std::vector<Block *> generate_basic_blocks(std::vector<Node *> nodes)
 
     blocks.push_back(new Block());
 
-    //link blocks based on control flow
-    for(int i = 0; i < nodes.size(); i++) {
-        Node* curNode = nodes[i];
-        if(curNode->type == Type::JUMP)
+    // link blocks based on control flow
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        Node *curNode = nodes[i];
+        if (curNode->type == Type::JUMP)
         {
             blocks[node_locations[i]]->add_next_block(node_locations[curNode->jump_label]);
         }
-        else if(curNode->type == Type::IF || curNode->type == Type::IF_FALSE) {
+        else if (curNode->type == Type::IF || curNode->type == Type::IF_FALSE)
+        {
             blocks[node_locations[i]]->add_next_block(node_locations[i + 1]);
             blocks[node_locations[i]]->add_next_block(node_locations[curNode->jump_label]);
         }
-        else if(curNode->type == Type::RETURN) {
+        else if (curNode->type == Type::RETURN)
+        {
             blocks[node_locations[i]]->add_next_block(blocks.size() - 1);
         }
-        else if(curNode->type == Type::CALL) {
+        else if (curNode->type == Type::CALL)
+        {
             blocks[node_locations[i]]->add_next_block(node_locations[i + 1]);
         }
     }
 
+    for(auto block : blocks)
+        calculate_next_use(block);
+        
     return blocks;
-
 }

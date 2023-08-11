@@ -1,2 +1,4 @@
 *.o
 parser_binary
+
+.vs_code

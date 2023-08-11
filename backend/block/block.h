@@ -8,11 +8,11 @@
 
 class Block
 {
-    std::vector<Node*> nodes;
     std::vector<int> next_blocks;
     bool is_end = false;
 
 public:
+    std::vector<Node*> nodes;
     Block()
     {
         is_end = true;

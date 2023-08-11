@@ -26,8 +26,16 @@ public:
     std::string arg1;
     std::string arg2;
     std::string op;
+    int next_use1;
+    int next_use2;
     R_Node(std::string arg1, std::string arg2, std::string op) : arg1(arg1), arg2(arg2), op(op)
     {
+    }
+
+    void set_next_use(int next_use1, int next_use2)
+    {
+        this->next_use1 = next_use1;
+        this->next_use2 = next_use2;
     }
 };
 
@@ -40,6 +48,7 @@ public:
     int jump_label;
     R_Node *r_node;
     std::vector<int> labels;
+    int l_next_use;
 
     Node(Type type, std::string l_value, R_Node *r_node) : type(type), l_value(l_value), r_node(r_node)
     {
@@ -52,6 +61,12 @@ public:
     void add_label(int label)
     {
         labels.push_back(label);
+    }
+
+    void set_next_use(int next_use1, int next_use2, int next_use3)
+    {
+        l_next_use = next_use1;
+        r_node->set_next_use(next_use2, next_use3);
     }
 };
 
