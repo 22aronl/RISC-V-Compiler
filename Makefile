@@ -2,7 +2,7 @@
 SRCS := $(shell find . -type f -name "*.cpp")
 OBJS := $(SRCS:.cpp=.o)
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++11 -O0
+CXXFLAGS := -Wall -Wextra -std=c++11 -g
 
 BTA_FILES := $(wildcard tests/icg/*.bta)
 

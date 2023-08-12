@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-
 enum class Type
 {
     ASSIGN,
@@ -56,6 +55,7 @@ public:
 
     Node(Type type, std::string l_value, int jump_label) : type(type), l_value(l_value), jump_label(jump_label)
     {
+        r_node = new R_Node("", "", "");
     }
 
     void add_label(int label)
@@ -87,7 +87,7 @@ class Environment
     std::unordered_map<std::string, int> var_map;
     Global_Environment *global_env;
     std::vector<Node *> icg_nodes;
-    
+
     std::vector<int> upcoming_labels;
 
 public:
@@ -105,8 +105,14 @@ public:
 
     void print_icg();
 
-    int get_icg_size() {
+    int get_icg_size()
+    {
         return icg_nodes.size();
+    }
+
+    int get_label_count()
+    {
+        return label_count;
     }
 
     std::vector<Node *> get_icg_nodes()

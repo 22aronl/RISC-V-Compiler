@@ -16,6 +16,7 @@ public:
     Block()
     {
         is_end = true;
+        //nodes = std::vector<Node*>();
     }
 
     Block(std::vector<Node*> nodes)

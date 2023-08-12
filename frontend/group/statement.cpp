@@ -50,7 +50,7 @@ void If_Statement::gen_icg(Environment *env, int start_label, int end_label)
     env->emit_label(label1);
     body->gen_icg(env, label1, end_label);
 
-    env->add_node(new Node(Type::JUMP, "", label2));
+    env->add_node(new Node(Type::JUMP, "", end_label));
     env->emit_label(label2);
     if(has_else) {
         else_body->gen_icg(env, label2, end_label);
@@ -61,7 +61,7 @@ void If_Statement::gen_icg(Environment *env, int start_label, int end_label)
 void Return_Statement::gen_icg(Environment *env, int start_label, int end_label)
 {
     std::string l_node = value->reduce(env);
-    env->add_node(new Node(Type::RETURN, l_node, nullptr));
+    env->add_node(new Node(Type::RETURN, l_node, 1)); //1 is the label pointing the the end
 }
 
 

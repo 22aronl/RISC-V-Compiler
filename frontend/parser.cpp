@@ -5,6 +5,8 @@
 #include "group/statement.h"
 #include "group/global.h"
 
+#include "../backend/compiler.h" //TODO: Remove this
+
 class Tokenizer
 {
     bool is_eof;
@@ -649,8 +651,9 @@ int main()
     Environment* env = new Environment(nullptr);
 
     Function_Declaration* func = (Function_Declaration*)method;
-    func->body->gen_icg(env, 0, 0);//env->get_new_label(), env->get_new_label());
-    // parser.parseFile();
+    func->body->gen_icg(env, env->get_new_label(), env->get_new_label());
     env->print_icg();
+    generate_basic_blocks(env);
+    // parser.parseFile();
     return 0;
 }

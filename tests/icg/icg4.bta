@@ -1,10 +1,10 @@
 route makeChocolate(int small, int big, int goal) : int {
-    if(big * 5 < goal) {
+    if(big * 6 < goal) {
         goal -= big * 5;
     }
     else
     {
-        goal %= 5;
+        goal %= 6;
     }
 
     if(small < goal) {
