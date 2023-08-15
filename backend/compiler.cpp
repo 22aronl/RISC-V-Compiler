@@ -7,6 +7,14 @@
 
 #include "compiler.h"
 
+void generate_block_dag(Block *b) {
+    std::unordered_map<std::string, int> var_map;
+
+    for(auto node : b->nodes) {
+        //TODO: Build Dag 
+    }
+}
+
 void calculate_next_use(Block *b)
 {
     std::unordered_map<std::string, int> next_use;
@@ -14,7 +22,9 @@ void calculate_next_use(Block *b)
     for (int i = b->nodes.size() - 1; i >= 0; i--)
     {
         Node *cur_node = b->nodes[i];
-        int x, y, z = -1;
+        int x = -1;
+        int y = -1;
+        int z = -1;
 
         if (cur_node->r_node->arg1 != "" && next_use.find(cur_node->r_node->arg1) != next_use.end())
             y = next_use[cur_node->r_node->arg1];
@@ -126,6 +136,7 @@ std::vector<Block *> generate_basic_blocks(Environment *env)
             curNode->jump_label = node_locations[jump_cor[curNode->jump_label]];
         }
     }
+
 
     for (auto block : blocks)
         calculate_next_use(block);
