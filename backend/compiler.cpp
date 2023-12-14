@@ -5,7 +5,25 @@
 #include "block/block.h"
 #include "../frontend/icg/env.h"
 
+#include "emitter.h"
 #include "compiler.h"
+
+int get_reg_right(std::string y, int restricted, Block* b, Emitter* em, Environment* env) {
+    //reg currently in a register
+    int reg = b->find_current_register(y);
+    if(reg != -1)
+        return reg;
+
+    //an empty slot for our register
+    reg = b->find_empty_register();
+    if(reg != -1) {
+        
+    }
+}
+
+void generate_machine_code(Block* b, Emitter* em, Environment* env) {
+
+}
 
 void generate_block_dag(Block *b) {
     std::unordered_map<std::string, int> var_map;
@@ -86,7 +104,7 @@ std::vector<Block *> generate_basic_blocks(Environment *env)
     {
         if (block_jumps[i] == 1)
         {
-            blocks.push_back(new Block(cur_block_nodes));
+            blocks.push_back(new Block(cur_block_nodes, blocks.size()));
             block_count++;
             cur_block_nodes.clear();
         }
@@ -97,12 +115,12 @@ std::vector<Block *> generate_basic_blocks(Environment *env)
 
     if (cur_block_nodes.size() > 0)
     {
-        blocks.push_back(new Block(cur_block_nodes));
+        blocks.push_back(new Block(cur_block_nodes, blocks.size()));
         node_locations[nodes.size() - 1] = block_count;
     }
 
 
-    blocks.push_back(new Block());
+    blocks.push_back(new Block(blocks.size()));
 
     jump_cor[2] = 0;
     jump_cor[0] = jump_cor[1] = nodes.size();
@@ -134,6 +152,12 @@ std::vector<Block *> generate_basic_blocks(Environment *env)
         {
             blocks[node_locations[i]]->add_next_block(node_locations[i + 1]);
             curNode->jump_label = node_locations[jump_cor[curNode->jump_label]];
+        }
+    }
+
+    for (auto block : blocks) {
+        for (int out_block : block->next_blocks) {
+            blocks[out_block]->add_in_block(block->get_location());
         }
     }
 

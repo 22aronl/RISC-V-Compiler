@@ -88,7 +88,9 @@
         "list": "cpp",
         "map": "cpp",
         "xhash": "cpp",
-        "xtree": "cpp"
+        "xtree": "cpp",
+        "__bits": "cpp",
+        "__verbose_abort": "cpp"
     },
     "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }

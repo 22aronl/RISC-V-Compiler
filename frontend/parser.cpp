@@ -644,7 +644,6 @@ public:
 
 int main()
 {
-
     Parser parser;
 
     Global* method = parser.parseGlobal();
