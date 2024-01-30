@@ -19,7 +19,8 @@ class RegUse {
 
 // reg x = reg y, reg z
 // use false if only y, true if y and z
-RegUse get_reg(std::string x, std::string y, std::string z, bool use, Node* node, Block *b, Emitter *em, Environment *env) {
+RegUse get_reg(std::string x, std::string y, std::string z, bool use, std::unordered_map<std::string, int> &var_map, int instruction_index,
+               Node *node, Block *b, Emitter *em, Environment *env) {
     int x_reg = -1, y_reg = -1, z_reg = -1;
     x_reg = b->find_current_register(x);
 
@@ -31,7 +32,7 @@ RegUse get_reg(std::string x, std::string y, std::string z, bool use, Node* node
         if (y_reg != -1) {
             b->fill_register(y_reg, y, em, env);
         }
-        //y_reg might be -1 -> y is not in a register and there are no empty registers 
+        // y_reg might be -1 -> y is not in a register and there are no empty registers
     }
 
     if (use) {
@@ -41,11 +42,53 @@ RegUse get_reg(std::string x, std::string y, std::string z, bool use, Node* node
             if (z_reg != -1) {
                 b->fill_register(z_reg, z, em, env);
             }
-            //z_reg might be -1 -> z is not in a register and there are no empty registers
+            // z_reg might be -1 -> z is not in a register and there are no empty registers
         }
     }
 
-    
+    // y_reg did not get set in a register
+    if (y_reg == -1) {
+        // find a register that has the least number of spill store instructions required
+        int min_spill = -1;
+        int min_distance = 0;
+        for (int i = 0; i < NUM_REGISTERS; i++) {
+            if (i == z_reg)
+                continue;
+
+            int cur_spill = 0;
+            int distance = 0;
+            for (std::string s : b->register_list[i]) {
+                if (b->variable_descriptors[s].size() == 1) {
+                    if (var_map[s] != -1) {
+                        cur_spill++;
+                        distance += var_map[s];
+                    }
+                }
+            }
+
+            if (min_spill == -1 || (cur_spill < min_spill) || (cur_spill == min_spill && distance < min_distance)) {
+                y_reg = i;
+                min_spill = cur_spill;
+                min_distance = distance;
+            }
+        }
+
+        // generate the needed store instructions
+        // TODO: take into account instructions that don't need a spill as it is a copy in memory
+        for (std::string s : b->register_list[y_reg]) {
+
+            b->variable_descriptors[s].erase(instruction_index);
+
+            if (b->variable_descriptors[s].size() == 0) {
+                if (var_map[s] != -1) {
+                    if (!b->reg_in_memory[s]) {
+                        
+                    }
+                }
+            }
+        }
+        b->fill_register(y_reg, y, em, env);
+    }
 
     return RegUse(x_reg, y_reg, z_reg);
 }
@@ -61,7 +104,7 @@ void generate_block_dag(Block *b) {
 }
 
 void calculate_next_use(Block *b) {
-    std::unordered_map<std::string, int>& next_use = b->next_use;
+    std::unordered_map<std::string, int> &next_use = b->next_use;
     next_use.insert(std::make_pair("", -1));
     for (int i = b->nodes.size() - 1; i >= 0; i--) {
         Node *cur_node = b->nodes[i];
@@ -164,6 +207,8 @@ std::vector<Block *> generate_basic_blocks(Environment *env) {
             blocks[out_block]->add_in_block(block->get_location());
         }
     }
+
+    // TODO: dag elimination
 
     for (auto block : blocks)
         calculate_next_use(block);

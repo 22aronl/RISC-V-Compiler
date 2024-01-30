@@ -1,6 +1,7 @@
 #ifndef _BLOCK_H_
 #define _BLOCK_H_
 
+#include <set>
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -25,7 +26,7 @@ class Block {
     std::unordered_map<std::string, int> next_use;
 
     std::vector<std::string> register_list[NUM_REGISTERS];
-    std::unordered_map<std::string, std::vector<int>> variable_descriptors;
+    std::unordered_map<std::string, std::set<int>> variable_descriptors;
     std::unordered_map<std::string, bool> reg_in_memory;
 
     Block(int loc) {
@@ -70,7 +71,7 @@ class Block {
     // fills an emtpy register
     void fill_register(int index, std::string reg, Emitter *em, Environment *env) {
         // TODO: do I need to check if already in use, I assume that no other register has this reg
-        reg_in_memory[reg] = false;
+        reg_in_memory[reg] = true;
         variable_descriptors[reg].push_back(index);
         register_list[index].clear();
         register_list[index].push_back(reg);

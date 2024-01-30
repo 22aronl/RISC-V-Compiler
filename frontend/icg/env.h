@@ -59,6 +59,7 @@ class Environment {
   public:
     int label_count;
     int var_count;
+    int dec_var_count;
     std::unordered_map<std::string, int> var_map;
     Global_Environment *global_env;
     std::vector<Node *> icg_nodes;
@@ -73,6 +74,8 @@ class Environment {
     void add_node(Node *node);
 
     void add_label(int label, int index);
+
+    void add_variable(std::string name);
 
     /// @brief adds a label to the next node that appears in the icg
     void emit_label(int label);

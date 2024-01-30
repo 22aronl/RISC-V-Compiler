@@ -4,6 +4,7 @@
 void Var_Declaration::gen_icg(Environment *env, int start_label, int end_label)
 {
     // DO Nothing
+    env->add_variable(name);
 }
 
 void Var_Assignment::gen_icg(Environment *env, int start_label, int end_label)

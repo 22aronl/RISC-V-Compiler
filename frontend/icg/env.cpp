@@ -7,6 +7,7 @@ Environment::Environment(Global_Environment *global_env)
     this->global_env = global_env;
     this->var_count = 0;
     this->label_count = 0;
+    this->dec_var_count = 0;
 }
 
 int Environment::get_new_label()
@@ -35,6 +36,11 @@ void Environment::add_node(Node *node)
 void Environment::add_label(int label, int index)
 {
     icg_nodes[index]->add_label(label);
+}
+
+void Environment::add_variable(std::string name)
+{
+    var_map[name] = this->dec_var_count++;
 }
 
 void Environment::emit_label(int label)
